@@ -1,0 +1,41 @@
+/* Decorative layer above the static body background.
+   Only transform/opacity are animated, so it stays on the compositor. */
+.bg-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg-fx__particle {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: rgba(125, 211, 252, 0.9);
+  opacity: 0;
+  animation: particle-float var(--dur) ease-in-out var(--delay) infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes particle-float {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+  30%,
+  70% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(10px, -60px, 0);
+  }
+}
+
+@media (max-width: 640px) {
+  .bg-fx__particle:nth-child(n + 4) {
+    display: none;
+  }
+}

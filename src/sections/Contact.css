@@ -1,0 +1,77 @@
+.contact__grid {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: clamp(2rem, 5vw, 3.5rem);
+  align-items: start;
+}
+
+.contact__heading {
+  font-size: clamp(1.35rem, 2.6vw, 1.7rem);
+}
+
+.contact__message {
+  margin-top: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.contact__channels {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.channel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  transition:
+    transform 0.3s var(--ease),
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.channel:hover {
+  transform: translateX(6px);
+  border-color: var(--border-strong);
+  box-shadow: var(--glow);
+}
+
+.channel__icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.18), rgba(99, 102, 241, 0.22));
+  border: 1px solid var(--border-strong);
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+.channel__text {
+  display: grid;
+  min-width: 0;
+}
+
+.channel__label {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.channel__value {
+  overflow: hidden;
+  color: #e8eefc;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .contact__grid {
+    grid-template-columns: 1fr;
+  }
+}

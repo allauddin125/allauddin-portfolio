@@ -1,0 +1,138 @@
+.about__grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: center;
+  gap: clamp(2.5rem, 6vw, 5rem);
+}
+
+.about__content .section-heading {
+  margin-bottom: 1.5rem;
+}
+
+.about__content p + p {
+  margin-top: 1rem;
+}
+
+.about__lead {
+  color: #d5e0fa;
+  font-size: 1.1rem;
+}
+
+.about__current {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+  color: #d5e0fa;
+  font-size: 0.95rem;
+}
+
+.about__current-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15);
+  transform: translateY(-1px);
+}
+
+.about__current-label {
+  margin-right: 0.25rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.about__focus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.about__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 2rem;
+}
+
+.about__cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.1rem;
+}
+
+.about__card {
+  padding: 1.5rem 1.4rem;
+  transition:
+    transform 0.35s var(--ease),
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    var(--reveal-transition);
+}
+
+.about__card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: var(--glow);
+}
+
+.about__card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.1rem;
+}
+
+.about__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  color: var(--accent);
+  font-size: 1.1rem;
+  transition: transform 0.35s var(--ease);
+}
+
+.about__card:hover .about__icon {
+  transform: scale(1.06);
+}
+
+.about__index {
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.about__card h3 {
+  font-size: 1.05rem;
+}
+
+.about__card p {
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .about__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .about__cards {
+    grid-template-columns: 1fr;
+  }
+
+  .about__actions .btn {
+    flex: 1 1 100%;
+  }
+}

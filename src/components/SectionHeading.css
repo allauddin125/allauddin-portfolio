@@ -1,0 +1,46 @@
+.section-heading {
+  max-width: 640px;
+  margin: 0 auto clamp(2.75rem, 5vw, 3.75rem);
+  text-align: center;
+}
+
+.section-heading--left {
+  margin-inline: 0;
+  text-align: left;
+}
+
+.section-heading__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.section-heading__eyebrow::before,
+.section-heading--center .section-heading__eyebrow::after {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent));
+}
+
+.section-heading--center .section-heading__eyebrow::after {
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+.section-heading__title {
+  font-size: clamp(2rem, 4.2vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.section-heading__subtitle {
+  margin-top: 0.9rem;
+  color: var(--text-muted);
+}

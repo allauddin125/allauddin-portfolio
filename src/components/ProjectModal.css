@@ -1,0 +1,122 @@
+.project-modal {
+  width: min(720px, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, #111b48, #070d29);
+  color: var(--text);
+  box-shadow:
+    0 40px 80px -20px rgba(0, 0, 0, 0.8),
+    0 0 60px -20px rgba(34, 211, 238, 0.4);
+  overflow-y: auto;
+}
+
+.project-modal::backdrop {
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.project-modal[open] {
+  animation: modal-in 0.3s var(--ease);
+}
+
+.project-modal__panel {
+  position: relative;
+}
+
+.project-modal__close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(5, 10, 31, 0.85);
+  border: 1px solid var(--border-strong);
+  color: #fff;
+  font-size: 1.2rem;
+  transition: background-color 0.2s ease;
+}
+
+.project-modal__close:hover {
+  background: rgba(34, 211, 238, 0.2);
+}
+
+.project-modal__image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: top;
+  border-bottom: 1px solid var(--border);
+}
+
+.project-modal__body {
+  padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.project-modal__category {
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.project-modal__title {
+  margin: 0.35rem 0 0.9rem;
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+
+.project-modal__subheading {
+  margin: 1.6rem 0 0.8rem;
+  font-size: 1rem;
+}
+
+.project-modal__list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.project-modal__list li {
+  display: flex;
+  gap: 0.7rem;
+  color: var(--text-muted);
+}
+
+.project-modal__list svg {
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+  color: var(--accent);
+}
+
+.project-modal__tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.project-modal__cta {
+  margin-top: 1.8rem;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-modal__cta {
+    width: 100%;
+  }
+}
