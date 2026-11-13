@@ -4,12 +4,44 @@ import { contact } from '../data/portfolio'
 import { LIMITS, normalizeContact, validateContact } from '../../shared/contactValidation'
 import './ContactForm.css'
 
-const ENDPOINT = '/.netlify/functions/send-email'
-const REQUEST_TIMEOUT_MS = 20_000
+
+const PRIMARY_ENDPOINT = 'https://ayas786.app.n8n.cloud/webhook/portfolio-contact'
+const FALLBACK_ENDPOINT = '/.netlify/functions/send-email'
+const PRIMARY_TIMEOUT_MS = 12_000
+const FALLBACK_TIMEOUT_MS = 15_000
 const GENERIC_ERROR = 'Unable to send your message right now. Please try again later.'
 
 const initialValues = { name: '', email: '', subject: '', message: '' }
 const validate = (values) => validateContact(normalizeContact(values))
+
+/**
+ * POSTs JSON with its own AbortController/timeout. Never throws.
+ * Success requires a 2xx status AND a JSON body with `success: true`.
+ */
+async function postContact(url, payload, timeoutMs) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    })
+    const result = await response.json().catch(() => null)
+    return {
+      ok: response.ok && result?.success === true,
+      status: response.status,
+      message: typeof result?.message === 'string' ? result.message : null,
+    }
+  } catch {
+    // Network failure, CORS rejection or timeout (AbortError).
+    return { ok: false, status: 0, message: null }
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
 
 const FIELD_ORDER = ['name', 'email', 'subject', 'message']
 
@@ -53,38 +85,32 @@ export default function ContactForm() {
     inFlightRef.current = true
     setStatus('sending')
 
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+    // Same payload for both services (identical to what the n8n workflow already accepts).
+    const payload = {
+      ...normalizeContact(values),
+      website: formRef.current.elements.website.value,
+    }
 
     try {
-      const response = await fetch(ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          ...normalizeContact(values),
-          website: formRef.current.elements.website.value,
-        }),
-        signal: controller.signal,
-      })
-      const result = await response.json().catch(() => null)
-
-      if (!response.ok || !result?.success) {
-        // Validation (400) and rate-limit (429) messages are safe to show; anything else stays generic.
-        const safeMessage =
-          [400, 429].includes(response.status) && result?.message ? result.message : GENERIC_ERROR
-        throw new Error(safeMessage)
+      let outcome = await postContact(PRIMARY_ENDPOINT, payload, PRIMARY_TIMEOUT_MS)
+      if (!outcome.ok) {
+        outcome = await postContact(FALLBACK_ENDPOINT, payload, FALLBACK_TIMEOUT_MS)
       }
 
-      setStatus('success')
-      setValues(initialValues)
-      setTouched({})
-      setErrors({})
-      formRef.current.reset()
-    } catch (error) {
-      setErrorMessage(error.name === 'Error' && error.message ? error.message : GENERIC_ERROR)
-      setStatus('error')
+      if (outcome.ok) {
+        setStatus('success')
+        setValues(initialValues)
+        setTouched({})
+        setErrors({})
+        formRef.current?.reset()
+      } else {
+        // Both failed. Validation (400) and rate-limit (429) messages are safe to show; anything else stays generic.
+        setErrorMessage(
+          [400, 429].includes(outcome.status) && outcome.message ? outcome.message : GENERIC_ERROR,
+        )
+        setStatus('error')
+      }
     } finally {
-      clearTimeout(timeoutId)
       inFlightRef.current = false
     }
   }
