@@ -11,10 +11,22 @@ const PRIMARY_ENDPOINT = 'https://ayas786.app.n8n.cloud/webhook/portfolio-contac
 const FALLBACK_ENDPOINT = '/.netlify/functions/send-email'
 const PRIMARY_TIMEOUT_MS = 12_000
 const FALLBACK_TIMEOUT_MS = 15_000
+const PRIMARY_MAX_ATTEMPTS = 2 // first try + one automatic retry
+const RETRY_DELAY_MS = 1_500
 const GENERIC_ERROR = 'Unable to send your message right now. Please try again later.'
 
 const initialValues = { name: '', email: '', subject: '', message: '' }
 const validate = (values) => validateContact(normalizeContact(values))
+
+// Unique, non-empty ID per submission. randomUUID needs a secure context (https or localhost).
+const createSubmissionId = () =>
+  typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
+
+// Temporary failures worth retrying: network error/timeout (0), request timeout (408), server errors (5xx).
+const isTemporaryFailure = (status) => status === 0 || status === 408 || status >= 500
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 /**
  * POSTs JSON with its own AbortController/timeout. Never throws.
@@ -50,6 +62,8 @@ const FIELD_ORDER = ['name', 'email', 'subject', 'message']
 export default function ContactForm() {
   const formRef = useRef(null)
   const inFlightRef = useRef(false)
+  // { id, content } of the last unconfirmed submission, so a retry of identical content reuses its ID.
+  const pendingSubmissionRef = useRef(null)
   const [errorMessage, setErrorMessage] = useState(GENERIC_ERROR)
   const [values, setValues] = useState(initialValues)
   const [errors, setErrors] = useState({})
@@ -87,19 +101,42 @@ export default function ContactForm() {
     inFlightRef.current = true
     setStatus('sending')
 
-    // Same payload for both services (identical to what the n8n workflow already accepts).
+    const { name, email, subject, message } = normalizeContact(values)
+
+    // Generate the ID once per submission. Re-sending the same content after a failure is a
+    // retry and reuses the ID; any edit (or a submission after success) gets a new one.
+    const content = JSON.stringify([name, email, subject, message])
+    if (pendingSubmissionRef.current?.content !== content) {
+      pendingSubmissionRef.current = { id: createSubmissionId(), content }
+    }
+
+    // One payload object, sent unchanged to n8n and (if needed) the Netlify fallback.
     const payload = {
-      ...normalizeContact(values),
+      name,
+      email,
+      subject,
+      message,
       website: formRef.current.elements.website.value,
+      submissionId: pendingSubmissionRef.current.id,
     }
 
     try {
-      let outcome = await postContact(PRIMARY_ENDPOINT, payload, PRIMARY_TIMEOUT_MS)
+      // n8n, retried on temporary failures. Every attempt sends the same payload (same submissionId),
+      // and each postContact call gets its own AbortController/timeout.
+      let outcome
+      for (let attempt = 1; attempt <= PRIMARY_MAX_ATTEMPTS; attempt += 1) {
+        outcome = await postContact(PRIMARY_ENDPOINT, payload, PRIMARY_TIMEOUT_MS)
+        if (outcome.ok || !isTemporaryFailure(outcome.status) || attempt === PRIMARY_MAX_ATTEMPTS) break
+        await wait(RETRY_DELAY_MS)
+      }
+      // 409 = n8n already stored this submissionId (an earlier attempt got through), so it's delivered.
+      if (outcome.status === 409) outcome = { ...outcome, ok: true }
       if (!outcome.ok) {
         outcome = await postContact(FALLBACK_ENDPOINT, payload, FALLBACK_TIMEOUT_MS)
       }
 
       if (outcome.ok) {
+        pendingSubmissionRef.current = null // next submission gets a new ID
         setStatus('success')
         setValues(initialValues)
         setTouched({})
